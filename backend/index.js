@@ -1,60 +1,36 @@
-const express = require("express");
+import express from 'express';
+import dotenv from 'dotenv';
+import cookieParser from 'cookie-parser';
+
 const app = express();
-const cors = require("cors")
-const User = require("./db/user.js")
+import cors from "cors"
 
-const dotenv = require("dotenv") 
+
+
+import connectDb from "./db/mongoose.js";
 const port = 8082;
-const connectDb = require("./db/mongoose.js")
-
-
+import userRouter from './routes/user.route.js';
+import authRouter from './routes/auth.route.js';
+import listingRouter from './routes/listing.route.js';
 
 dotenv.config();
 
 
-app.use(cors())
-app.use(express.json())
 
+app.use(cookieParser());
+app.use(cors());
+app.use(express.json());
 
-app.post("/register",async(req,res)=>{
-    try{
-        const {username,password} = req.body;
-        console.log(req.body)
-        const user = new User({username,password})
-        await user.save()
-        res.status(201).json({message: "User is Registered"})
-    }catch(error){
-        res.status(500).json({message: "Registeration Failed"})
-    }
-})
-
-app.post("/login",async(req,res)=>{
-    try{
-        const {username,password} = req.body;
-        const user = await User.findOne({username})
-        if(!user){
-            return res.status(400).json({error: "Invalid Credentials"})
-        }
-        if(user.password !== password){
-            return res.status(401).json({error: "Invalid Credentials"})
-        }
-        res.status(200).json({message: "login Successful"})
-    }catch{
-        return res.status(500).json({error: "ILogin Failed"})
-    
-    }
-})
-
-
-
+app.use('/api/user', userRouter);
+app.use('/api/auth', authRouter);
+app.use("/api/listing", listingRouter);
 
 connectDb()
-.then(()=>{
-    app.listen(port,()=>{
-        console.log(`Server is Running on Port:${port}`)
-    })
-    
-})
-.catch((error)=>{
-    console.log("MONGO db connection failed !!! ", err)
-})
+  .then(() => {
+    app.listen(port, () => {
+      console.log(`Server is Running on Port:${port}`);
+    });
+  })
+  .catch((error) => {
+    console.log("MONGO db connection failed !!! ", err);
+  });
